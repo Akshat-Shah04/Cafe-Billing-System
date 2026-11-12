@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header">
+      <b>List of Orders</b>
+      <a class="btn btn-primary btn-sm float-right" href="{% url 'orders:pos' %}"><i class="fa fa-plus"></i> New</a>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+      <table class="table table-condensed table-bordered table-hover" id="order-table">
+        <thead>
+          <tr>
+            <th class="text-center">#</th>
+            <th>Date</th>
+            <th>Invoice</th>
+            <th>Order Number</th>
+            <th class="text-right">Amount</th>
+            <th class="text-center">Status</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td class="text-center">{{ forloop.counter }}</td>
+            <td data-order="{{ order.created_at|date:'U' }}"><b>{{ order.created_at|date:"M d, Y" }}</b><br><small class="text-muted">{{ order.created_at|date:"h:i A" }}</small></td>
+            <td><b>{{ order.invoice_no|default:"N/A" }}</b></td>
+            <td><b>{{ order.order_number }}</b></td>
+            <td class="text-right"><b>{{ order.total_amount|floatformat:2|intcomma }}</b></td>
+            <td class="text-center">{% include "orders/_status_badge.html" %}</td>
+            <td class="text-center text-nowrap">
+              {% if order.is_open %}
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'orders:pos_edit' order.pk %}">Edit</a>
+              {% endif %}
+              <button class="btn btn-sm btn-outline-primary view_order" type="button" data-url="{% url 'orders:view' order.pk %}">View</button>
+              {% if order.is_open %}
+                <button class="btn btn-sm btn-outline-danger delete_order" type="button" data-url="{% url 'orders:delete' order.pk %}">Delete</button>
+              {% elif order.status == "paid" and user.is_admin %}
+                <button class="btn btn-sm btn-outline-danger void_order" type="button" data-url="{% url 'orders:void' order.pk %}" data-invoice="{{ order.invoice_no }}">Void</button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="void_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <form class="modal-content" id="void-form">
+      <div class="modal-header"><h5 class="modal-title">Void <span id="void-invoice"></span></h5></div>
+      <div class="modal-body">
+        <p>The order stays on record, marked as voided, and is left out of the sales report.</p>
+        <div class="form-group">
+          <label for="void-reason">Reason</label>
+          <input type="text" class="form-control" id="void-reason" name="reason" maxlength="200" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-danger">Void order</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(function () {
+    $("#order-table").DataTable({ order: [[1, "desc"]], columnDefs: [{ orderable: false, targets: [6] }] });
+    $(document).on("click", ".view_order", function () {
+      uni_modal("Order Details", $(this).data("url"), "modal-lg");
+    });
+    $(document).on("click", ".delete_order", function () {
+      const url = $(this).data("url");
+      _conf("Are you sure to delete this order?", function () {
+        post_and_reload(url, {}, "Data successfully deleted.");
+      });
+    });
+    let voidUrl = null;
+    $(document).on("click", ".void_order", function () {
+      voidUrl = $(this).data("url");
+      $("#void-invoice").text($(this).data("invoice"));
+      $("#void-reason").val("");
+      $("#void_modal").modal("show");
+    });
+    $("#void-form").on("submit", function (e) {
+      e.preventDefault();
+      $("#void_modal").modal("hide");
+      post_and_reload(voidUrl, $(this).serialize(), "Order voided.");
+    });
+  });
+</script>
+{% endblock %}

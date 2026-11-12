@@ -1,0 +1,1 @@
+{% if order.status == "paid" %}<span class="badge badge-success">Paid</span>{% elif order.status == "void" %}<span class="badge badge-void">Voided</span>{% else %}<span class="badge badge-primary">Unpaid</span>{% endif %}

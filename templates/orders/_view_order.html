@@ -1,0 +1,23 @@
+<div class="container-fluid py-1">
+  {% include "orders/_receipt_body.html" %}
+  <hr>
+  <p class="mb-1 text-muted"><small>Taken by {{ order.created_by }} on {{ order.created_at|date:"M d, Y h:i A" }}{% if order.paid_by %}; paid to {{ order.paid_by }}{% endif %}.</small></p>
+  {% if order.status == "void" %}
+  <div class="alert alert-secondary mb-0"><small>Voided by {{ order.voided_by }} on {{ order.voided_at|date:"M d, Y h:i A" }}: {{ order.void_reason }}</small></div>
+  {% endif %}
+</div>
+<div class="modal-footer display py-1">
+  <button class="btn btn-success" type="button" id="print"><i class="fa fa-print"></i> Print</button>
+  <button class="btn btn-secondary" type="button" data-dismiss="modal">Close</button>
+</div>
+<style>
+  #uni_modal .modal-footer:not(.display) { display: none; }
+</style>
+<script>
+  $("#print").on("click", function () {
+    window.open("{% url 'orders:receipt' order.pk %}?print=1", "_blank", "width=420,height=640");
+  });
+  $("#uni_modal").one("hidden.bs.modal", function () {
+    $("#uni_modal .modal-footer").show();
+  });
+</script>

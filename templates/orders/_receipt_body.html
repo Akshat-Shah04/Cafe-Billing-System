@@ -1,0 +1,38 @@
+{% load humanize %}
+<div class="receipt">
+  <p class="text-center mb-0"><b>{{ cafe.name }}</b></p>
+  {% if cafe.address %}<p class="text-center mb-0"><small>{{ cafe.address }}</small></p>{% endif %}
+  {% if cafe.contact or cafe.email %}<p class="text-center mb-0"><small>{{ cafe.contact }}{% if cafe.contact and cafe.email %} &middot; {% endif %}{{ cafe.email }}</small></p>{% endif %}
+  <hr>
+  <p class="text-center"><b>{% if order.status == "open" %}Bill{% else %}Receipt{% endif %}</b>{% if order.status == "void" %} <b class="text-danger">(VOIDED)</b>{% endif %}</p>
+  {% if order.invoice_no %}<p class="mb-0">Invoice Number: <b>{{ order.invoice_no }}</b></p>{% endif %}
+  <p class="mb-0">Date: <b>{% if order.paid_at %}{{ order.paid_at|date:"M d, Y h:i A" }}{% else %}{{ order.created_at|date:"M d, Y h:i A" }}{% endif %}</b></p>
+  <hr>
+  <p><b>Order List</b></p>
+  <table width="100%">
+    <thead><tr><td><b>QTY</b></td><td><b>Order</b></td><td class="text-right"><b>Amount</b></td></tr></thead>
+    <tbody>
+      {% for item in order.items.all %}
+      <tr>
+        <td>{{ item.qty }}</td>
+        <td>{{ item.product_name }} <small>({{ item.unit_price|floatformat:2|intcomma }})</small></td>
+        <td class="text-right">{{ item.line_total|floatformat:2|intcomma }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <hr>
+  <table width="100%">
+    <tbody>
+      <tr><td><b>Total Amount</b></td><td class="text-right"><b>{{ cafe.currency_symbol }}{{ order.total_amount|floatformat:2|intcomma }}</b></td></tr>
+      {% if order.amount_tendered is not None %}
+      <tr><td><b>Amount Tendered</b></td><td class="text-right"><b>{{ order.amount_tendered|floatformat:2|intcomma }}</b></td></tr>
+      <tr><td><b>Change</b></td><td class="text-right"><b>{{ order.change|floatformat:2|intcomma }}</b></td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+  <hr>
+  <p class="text-center mb-0"><b>Order No.</b></p>
+  <h4 class="text-center"><b>{{ order.order_number }}</b></h4>
+  {% if cafe.receipt_footer %}<p class="text-center mb-0"><small>{{ cafe.receipt_footer }}</small></p>{% endif %}
+</div>

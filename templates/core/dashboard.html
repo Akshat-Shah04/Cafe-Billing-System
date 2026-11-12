@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card mb-3">
+    <div class="card-body">
+      Welcome back {{ user.full_name }}!
+      <a href="{% url 'orders:pos' %}" class="btn btn-primary btn-sm float-right"><i class="fa fa-plus"></i> Take Orders</a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-6 col-lg-3 mb-3">
+      <div class="card stat-card"><div class="card-body">
+        <i class="fa fa-coins stat-icon"></i>
+        <div class="text-muted">Sales today</div>
+        <div class="value">{{ cafe.currency_symbol }}{{ today_total|floatformat:2|intcomma }}</div>
+      </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3 mb-3">
+      <div class="card stat-card"><div class="card-body">
+        <i class="fa fa-receipt stat-icon"></i>
+        <div class="text-muted">Paid orders today</div>
+        <div class="value">{{ today_count }}</div>
+      </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3 mb-3">
+      <div class="card stat-card"><div class="card-body">
+        <i class="fa fa-hourglass-half stat-icon"></i>
+        <div class="text-muted">Unpaid orders</div>
+        <div class="value"><a href="{% url 'orders:list' %}">{{ unpaid_count }}</a></div>
+      </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3 mb-3">
+      <div class="card stat-card"><div class="card-body">
+        <i class="fa fa-calendar-alt stat-icon"></i>
+        <div class="text-muted">Sales this month</div>
+        <div class="value">{{ cafe.currency_symbol }}{{ month_total|floatformat:2|intcomma }}</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-6 mb-3">
+      <div class="card h-100">
+        <div class="card-header"><b>Best sellers this month</b></div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Amount</th></tr></thead>
+            <tbody>
+              {% for p in top_products %}
+              <tr><td>{{ p.product_name }}</td><td class="text-right">{{ p.qty }}</td><td class="text-right">{{ p.amount|floatformat:2|intcomma }}</td></tr>
+              {% empty %}
+              <tr><td colspan="3" class="text-center text-muted py-3">No sales yet this month.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-3">
+      <div class="card h-100">
+        <div class="card-header"><b>Recent orders</b></div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Order No.</th><th>Time</th><th class="text-right">Amount</th><th class="text-center">Status</th></tr></thead>
+            <tbody>
+              {% for o in recent_orders %}
+              <tr>
+                <td>{{ o.order_number }}</td>
+                <td>{{ o.created_at|date:"M d, h:i A" }}</td>
+                <td class="text-right">{{ o.total_amount|floatformat:2|intcomma }}</td>
+                <td class="text-center">{% include "orders/_status_badge.html" with order=o %}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No orders yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

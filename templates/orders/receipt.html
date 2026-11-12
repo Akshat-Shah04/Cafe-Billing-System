@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ order }} | {{ cafe.name }}</title>
+  <style>
+    body { font-family: "Courier New", monospace; font-size: 13px; color: #000; margin: 0; padding: 12px; }
+    .receipt { max-width: 320px; margin: 0 auto; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .text-danger { color: #c00; }
+    .mb-0 { margin-bottom: 0; }
+    p { margin: 0 0 .4em; }
+    hr { border: 0; border-top: 1px dashed #000; }
+    h4 { margin: .2em 0; font-size: 22px; }
+    @page { margin: 6mm; }
+  </style>
+</head>
+<body>
+  {% include "orders/_receipt_body.html" %}
+  {% if autoprint %}
+  <script>
+    window.addEventListener("load", function () {
+      window.print();
+    });
+    window.addEventListener("afterprint", function () {
+      window.close();
+    });
+  </script>
+  {% endif %}
+</body>
+</html>

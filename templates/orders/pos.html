@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Take Orders | {{ cafe.name }}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block main %}
+<div class="pos-page container-fluid">
+  <div class="row">
+    <div class="col-lg-4">
+      <div class="card bg-dark border-primary">
+        <div class="card-header text-white border-primary">
+          <b>Order List</b>{% if order %} <span class="badge badge-warning ml-1">Editing unpaid order</span>{% endif %}
+          <a class="btn btn-primary btn-sm float-right" href="{% url 'orders:list' %}"><i class="fa fa-home"></i> Home</a>
+        </div>
+        <div class="card-body">
+          <form id="manage-order" autocomplete="off">
+            <div class="bg-white" id="o-list">
+              <div class="d-flex w-100 bg-dark mb-1 p-1 align-items-center">
+                <label for="order_number" class="text-white mb-0 mr-2"><b>Order No.</b></label>
+                <input type="number" class="form-control form-control-sm w-auto" id="order_number" min="1" max="9999" value="{{ suggested_number }}" required>
+              </div>
+              <table class="table table-bordered table-sm bg-light mb-0">
+                <colgroup><col width="28%"><col width="40%"><col width="26%"><col width="6%"></colgroup>
+                <thead><tr><th>QTY</th><th>Order</th><th class="text-right">Amount</th><th></th></tr></thead>
+                <tbody></tbody>
+              </table>
+              <div class="empty-order">Tap a product to add it to the order.</div>
+            </div>
+            <div class="bg-white" id="calc">
+              <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><b>Total</b></h4>
+                <h4 class="mb-0"><b>{{ cafe.currency_symbol }}<span id="total_amount">0.00</span></b></h4>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card border-primary">
+        <div class="card-header bg-dark text-white border-primary d-flex align-items-center justify-content-between">
+          <b>Products</b>
+          <input type="search" class="form-control form-control-sm" id="prod-search" placeholder="Search products">
+        </div>
+        <div class="card-body bg-dark d-flex flex-wrap" id="prod-list">
+          <div class="col-12 col-md-3 px-0 pr-md-2 mb-2 mb-md-0">
+            <div class="w-100 bg-white rounded" id="cat-list">
+              <b class="px-3 cat-title">Category</b>
+              <hr class="my-2 cat-title">
+              <div class="card bg-primary mx-2 mb-2 cat-item active" data-id="all"><div class="card-body py-2"><b class="text-white">All</b></div></div>
+              {% for c in categories %}
+              <div class="card bg-primary mx-2 mb-2 cat-item" data-id="{{ c.id }}"><div class="card-body py-2"><b class="text-white">{{ c.name }}</b></div></div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-12 col-md-9 px-0">
+            <div class="row" id="prod-grid">
+              {% for p in products %}
+              <div class="col-6 col-md-4 mb-2 prod-col" data-category-id="{{ p.category_id }}" data-name="{{ p.name|lower }}">
+                <div class="card bg-primary prod-item h-100" data-id="{{ p.id }}">
+                  <div class="card-body">
+                    <b class="text-white">{{ p.name }}</b>
+                    <span class="price">{{ cafe.currency_symbol }}{{ p.price }}</span>
+                  </div>
+                </div>
+              </div>
+              {% empty %}
+              <div class="col-12 text-white-50 p-4">No products are available. An admin can add them under Products.</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-dark border-primary">
+          <div class="row justify-content-center">
+            <button class="btn btn-sm col-5 col-sm-3 btn-primary mr-2" type="button" id="pay"><i class="fa fa-money-bill-wave"></i> Pay</button>
+            <button class="btn btn-sm col-5 col-sm-3 btn-primary" type="button" id="save_order"><i class="fa fa-clock"></i> Pay later</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="pay_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+    <form class="modal-content" id="pay-form" autocomplete="off">
+      <div class="modal-header">
+        <h5 class="modal-title"><b>Pay</b></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="apayable">Amount Payable</label>
+          <input type="text" class="form-control text-right" id="apayable" readonly>
+        </div>
+        <div class="form-group">
+          <label for="tendered">Amount Tendered</label>
+          <input type="text" inputmode="decimal" class="form-control text-right" id="tendered">
+          <div class="mt-2" id="quick-cash"></div>
+        </div>
+        <div class="form-group mb-0">
+          <label for="change">Change</label>
+          <input type="text" class="form-control text-right" id="change" value="0.00" readonly>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary btn-sm" id="confirm-pay">Pay</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{ products|json_script:"products-data" }}
+{{ lines|json_script:"lines-data" }}
+<script>
+  window.POS = {
+    orderId: {% if order %}{{ order.pk }}{% else %}null{% endif %},
+    saveUrl: "{% url 'orders:save' %}",
+    listUrl: "{% url 'orders:list' %}",
+  };
+</script>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/pos.js' %}"></script>
+{% endblock %}

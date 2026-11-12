@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card col-lg-8 px-0">
+    <div class="card-header"><b>System Settings</b></div>
+    <form id="manage-settings" novalidate>
+      <div class="card-body">
+        <div class="form-group">
+          <label for="s-name">Cafe name</label>
+          <input type="text" class="form-control" id="s-name" name="name" maxlength="120" value="{{ form.name.value|default_if_none:'' }}" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="s-email">Email</label>
+            <input type="email" class="form-control" id="s-email" name="email" value="{{ form.email.value|default_if_none:'' }}">
+          </div>
+          <div class="form-group col-md-6">
+            <label for="s-contact">Contact</label>
+            <input type="text" class="form-control" id="s-contact" name="contact" maxlength="30" value="{{ form.contact.value|default_if_none:'' }}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="s-address">Address</label>
+          <input type="text" class="form-control" id="s-address" name="address" maxlength="250" value="{{ form.address.value|default_if_none:'' }}">
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-3">
+            <label for="s-currency">Currency symbol</label>
+            <input type="text" class="form-control" id="s-currency" name="currency_symbol" maxlength="5" value="{{ form.currency_symbol.value|default_if_none:'' }}">
+          </div>
+          <div class="form-group col-md-9">
+            <label for="s-footer">Receipt footer</label>
+            <input type="text" class="form-control" id="s-footer" name="receipt_footer" maxlength="200" value="{{ form.receipt_footer.value|default_if_none:'' }}">
+          </div>
+        </div>
+        <small class="text-muted">The name, address, contact and footer are printed on every receipt.</small>
+      </div>
+      <div class="card-footer text-right">
+        <button class="btn btn-primary btn-sm">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  $("#manage-settings").on("submit", function (e) {
+    e.preventDefault();
+    post_and_reload("{% url 'core:settings' %}", $(this).serialize(), "Settings saved.", $(this));
+  });
+</script>
+{% endblock %}

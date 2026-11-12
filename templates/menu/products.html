@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <form id="manage-product" novalidate>
+        <div class="card">
+          <div class="card-header">Product Form</div>
+          <div class="card-body">
+            <input type="hidden" name="id">
+            <div class="form-group">
+              <label class="control-label" for="prod-category">Category</label>
+              <select name="category" id="prod-category" class="custom-select" required>
+                <option value="">Please select here</option>
+                {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="control-label" for="prod-name">Name</label>
+              <input type="text" class="form-control" id="prod-name" name="name" maxlength="120" required>
+            </div>
+            <div class="form-group">
+              <label class="control-label" for="prod-description">Description</label>
+              <textarea name="description" id="prod-description" rows="3" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="control-label" for="prod-price">Price</label>
+              <input type="number" class="form-control text-right" id="prod-price" name="price" min="0" step="0.01" required>
+            </div>
+            <div class="form-group mb-0">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="prod-available" name="is_available" checked>
+                <label class="custom-control-label" for="prod-available">Available</label>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer text-center">
+            <button class="btn btn-sm btn-primary col-sm-4">Save</button>
+            <button class="btn btn-sm btn-light col-sm-4" type="reset">Cancel</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header"><b>Product List</b></div>
+        <div class="card-body">
+          <table class="table table-bordered table-hover" id="product-table">
+            <thead><tr><th class="text-center">#</th><th>Category</th><th>Product Info.</th><th class="text-center">Action</th></tr></thead>
+            <tbody>
+              {% for p in products %}
+              <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td><b>{{ p.category.name }}</b></td>
+                <td>
+                  <p>Name: <b>{{ p.name }}</b></p>
+                  <p><small>Price: <b>{{ cafe.currency_symbol }}{{ p.price|floatformat:2|intcomma }}</b></small></p>
+                  <p><small>Status: {% if p.is_available %}<b class="text-success">Available</b>{% else %}<b class="text-muted">Unavailable</b>{% endif %}</small></p>
+                  {% if p.description %}<p><small>Description: <b>{{ p.description }}</b></small></p>{% endif %}
+                </td>
+                <td class="text-center text-nowrap">
+                  <button class="btn btn-sm btn-primary edit_product" type="button" data-id="{{ p.id }}" data-name="{{ p.name }}" data-description="{{ p.description }}" data-price="{{ p.price }}" data-available="{{ p.is_available|yesno:'1,0' }}" data-category="{{ p.category_id }}">Edit</button>
+                  <button class="btn btn-sm btn-danger delete_product" type="button" data-url="{% url 'menu:product_delete' p.id %}">Delete</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  $(function () {
+    const $form = $("#manage-product");
+    $("#product-table").DataTable({ columnDefs: [{ orderable: false, targets: [3] }] });
+    $form.on("reset", function () {
+      $form.find("[name=id]").val("");
+      $form.find(".is-invalid").removeClass("is-invalid");
+    });
+    $form.on("submit", function (e) {
+      e.preventDefault();
+      const updating = !!$form.find("[name=id]").val();
+      post_and_reload("{% url 'menu:product_save' %}", $form.serialize(), updating ? "Data successfully updated." : "Data successfully added.", $form);
+    });
+    $(document).on("click", ".edit_product", function () {
+      const d = $(this).data();
+      $form[0].reset();
+      $form.find("[name=id]").val(d.id);
+      $form.find("[name=category]").val(d.category);
+      $form.find("[name=name]").val(d.name).focus();
+      $form.find("[name=description]").val(d.description);
+      $form.find("[name=price]").val(d.price);
+      $("#prod-available").prop("checked", String(d.available) === "1");
+    });
+    $(document).on("click", ".delete_product", function () {
+      const url = $(this).data("url");
+      _conf("Are you sure to delete this product?", () => post_and_reload(url, {}, "Data successfully deleted."));
+    });
+  });
+</script>
+{% endblock %}

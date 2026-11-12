@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+  <div class="mb-2 clearfix">
+    <button class="btn btn-primary float-right btn-sm" id="new_user"><i class="fa fa-plus"></i> New user</button>
+  </div>
+  <div class="card">
+    <div class="card-header"><b>User List</b></div>
+    <div class="card-body">
+      <table class="table table-striped table-bordered" id="user-table">
+        <thead><tr><th class="text-center">#</th><th>Name</th><th>Username</th><th>Type</th><th>Last login</th><th class="text-center">Action</th></tr></thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td class="text-center">{{ forloop.counter }}</td>
+            <td>{{ u.full_name }}{% if u.pk == user.pk %} <small class="text-muted">(you)</small>{% endif %}</td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.get_role_display }}</td>
+            <td>{{ u.last_login|date:"M d, Y h:i A"|default:"Never" }}</td>
+            <td class="text-center">
+              <div class="btn-group">
+                <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Action</button>
+                <div class="dropdown-menu dropdown-menu-right">
+                  <a class="dropdown-item edit_user" href="javascript:void(0)" data-url="{% url 'accounts:user_form' %}?id={{ u.pk }}">Edit</a>
+                  {% if u.pk != user.pk %}
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item text-danger delete_user" href="javascript:void(0)" data-url="{% url 'accounts:user_delete' u.pk %}">Delete</a>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  $(function () {
+    $("#user-table").DataTable({ columnDefs: [{ orderable: false, targets: [5] }] });
+    $("#new_user").on("click", () => uni_modal("New User", "{% url 'accounts:user_form' %}"));
+    $(document).on("click", ".edit_user", function () {
+      uni_modal("Edit User", $(this).data("url"));
+    });
+    $(document).on("click", ".delete_user", function () {
+      const url = $(this).data("url");
+      _conf("Are you sure to delete this user?", () => post_and_reload(url, {}, "Data successfully deleted."));
+    });
+  });
+</script>
+{% endblock %}

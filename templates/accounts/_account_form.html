@@ -1,0 +1,28 @@
+<div class="container-fluid">
+  <form id="manage-account" novalidate autocomplete="off">
+    <div class="form-group">
+      <label for="a-name">Name</label>
+      <input type="text" name="full_name" id="a-name" class="form-control" maxlength="150" value="{{ form.full_name.value|default_if_none:'' }}" required>
+    </div>
+    <div class="form-group">
+      <label for="a-username">Username</label>
+      <input type="text" name="username" id="a-username" class="form-control" maxlength="150" value="{{ form.username.value|default_if_none:'' }}" required>
+    </div>
+    <hr>
+    <p class="text-muted mb-2"><small>To change your password, enter your current password and the new one. Leave both blank to keep it.</small></p>
+    <div class="form-group">
+      <label for="a-current">Current password</label>
+      <input type="password" name="current_password" id="a-current" class="form-control" autocomplete="current-password">
+    </div>
+    <div class="form-group mb-0">
+      <label for="a-new">New password</label>
+      <input type="password" name="new_password" id="a-new" class="form-control" autocomplete="new-password">
+    </div>
+  </form>
+</div>
+<script>
+  $("#manage-account").on("submit", function (e) {
+    e.preventDefault();
+    post_and_reload("{% url 'accounts:account_save' %}", $(this).serialize(), "Account updated.", $(this));
+  });
+</script>

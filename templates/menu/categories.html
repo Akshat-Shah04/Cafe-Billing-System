@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <form id="manage-category" novalidate>
+        <div class="card">
+          <div class="card-header">Category Form</div>
+          <div class="card-body">
+            <input type="hidden" name="id">
+            <div class="form-group">
+              <label class="control-label" for="cat-name">Name</label>
+              <input type="text" class="form-control" id="cat-name" name="name" maxlength="100" required>
+            </div>
+            <div class="form-group mb-0">
+              <label class="control-label" for="cat-description">Description</label>
+              <textarea name="description" id="cat-description" rows="4" class="form-control"></textarea>
+            </div>
+          </div>
+          <div class="card-footer text-center">
+            <button class="btn btn-sm btn-primary col-sm-4">Save</button>
+            <button class="btn btn-sm btn-light col-sm-4" type="reset">Cancel</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header"><b>Category List</b></div>
+        <div class="card-body">
+          <table class="table table-bordered table-hover" id="category-table">
+            <thead><tr><th class="text-center">#</th><th>Category Info.</th><th class="text-center">Products</th><th class="text-center">Action</th></tr></thead>
+            <tbody>
+              {% for c in categories %}
+              <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td>
+                  <p>Name: <b>{{ c.name }}</b></p>
+                  <p><small>Description: <b>{{ c.description|default:"-" }}</b></small></p>
+                </td>
+                <td class="text-center">{{ c.product_count }}</td>
+                <td class="text-center text-nowrap">
+                  <button class="btn btn-sm btn-primary edit_category" type="button" data-id="{{ c.id }}" data-name="{{ c.name }}" data-description="{{ c.description }}">Edit</button>
+                  <button class="btn btn-sm btn-danger delete_category" type="button" data-url="{% url 'menu:category_delete' c.id %}">Delete</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  $(function () {
+    const $form = $("#manage-category");
+    $("#category-table").DataTable({ columnDefs: [{ orderable: false, targets: [3] }] });
+    $form.on("reset", function () {
+      $form.find("[name=id]").val("");
+      $form.find(".is-invalid").removeClass("is-invalid");
+    });
+    $form.on("submit", function (e) {
+      e.preventDefault();
+      const updating = !!$form.find("[name=id]").val();
+      post_and_reload("{% url 'menu:category_save' %}", $form.serialize(), updating ? "Data successfully updated." : "Data successfully added.", $form);
+    });
+    $(document).on("click", ".edit_category", function () {
+      $form[0].reset();
+      $form.find("[name=id]").val($(this).data("id"));
+      $form.find("[name=name]").val($(this).data("name")).focus();
+      $form.find("[name=description]").val($(this).data("description"));
+    });
+    $(document).on("click", ".delete_category", function () {
+      const url = $(this).data("url");
+      _conf("Are you sure to delete this category?", () => post_and_reload(url, {}, "Data successfully deleted."));
+    });
+  });
+</script>
+{% endblock %}
